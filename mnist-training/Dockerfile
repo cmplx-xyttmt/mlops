@@ -3,7 +3,7 @@ FROM gcr.io/deeplearning-platform-release/pytorch-gpu
 WORKDIR /root
 
 COPY requirements.txt .
-RUN pip3 install -U -r requirements.txt
+RUN pip3 install --no-cache-dir -U -r requirements.txt
 
 COPY . /trainer
 

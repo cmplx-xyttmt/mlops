@@ -1,6 +1,8 @@
-import os
+import torch
 from torch import nn
-from torchvision import transforms
+from torchvision.transforms import ToTensor
+from torchvision import datasets
+from torch.utils.data import DataLoader
 
 
 class NeuralNetwork(nn.Module):
@@ -15,10 +17,10 @@ class NeuralNetwork(nn.Module):
                 nn.Linear(512, 10),
             )
 
-        def forward(self, x):
-            x = self.flatten(x)
-            logits = self.linear_relu_stack(x)
-            return logits
+    def forward(self, x):
+        x = self.flatten(x)
+        logits = self.linear_relu_stack(x)
+        return logits
 
 
 def train_loop(dataloader, model, loss_fn, optimizer):
@@ -57,6 +59,29 @@ def test_loop(dataloader, model, loss_fn):
     print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
 def run_loops():
+    device = ("cuda" if torch.cuda.is_available() else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+
+    training_data = datasets.FashionMNIST(
+        root="data",
+        train=True,
+        download=True,
+        transform=ToTensor()
+    )
+
+    test_data = datasets.FashionMNIST(
+        root="data",
+        train=False,
+        download=True,
+        transform=ToTensor()
+    )
+
+    train_dataloader = DataLoader(training_data, batch_size=64, shuffle=True)
+    test_dataloader = DataLoader(test_data, batch_size=64, shuffle=True)
+
+    model = NeuralNetwork().to(device)
     learning_rate = 1e-3
     epochs = 20
 
@@ -64,8 +89,7 @@ def run_loops():
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     for t in range(epochs):
-        print(f"Epoch {t + 1}\n-----------------------------------------)
+        print(f"Epoch {t + 1}\n-----------------------------------------")
         train_loop(train_dataloader, model, loss_fn, optimizer)
         test_loop(test_dataloader, model, loss_fn)
     print("Done!")
-
